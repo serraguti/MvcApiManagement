@@ -3,53 +3,56 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
-using MvcApiManagement.Models;
-using System.Net.Http;
 using System.Web;
+using System.Collections.Specialized;
+using System.Net.Http;
+using MvcApiManagement.Models;
 
 namespace MvcApiManagement.Services
 {
-    public class ServiceApiHospital
+    public class ServiceApiDoctores
     {
         private String UrlApi;
+        private NameValueCollection queryString;
         private MediaTypeWithQualityHeaderValue Header;
 
-        public ServiceApiHospital(string url)
+        public ServiceApiDoctores(string url)
         {
             this.UrlApi = url;
+            this.queryString = HttpUtility.ParseQueryString(string.Empty);
             this.Header = new MediaTypeWithQualityHeaderValue("application/json");
         }
 
-        public async Task<List<Hospital>> GetHospitalesAsync() { 
+        private async Task<T> CallApiAsync<T>(string request)
+        {
             using (HttpClient client = new HttpClient())
             {
-                //LAS PETICIONES API MANAGEMENT INCLUYEN
-                //UN QUERYSTRING VACIO AL FINAL DE LA PETICION
-                var queryString =
-                    HttpUtility.ParseQueryString(string.Empty);
-                var request = "/api/hospitales?" + queryString;
-                //LAS PETICIONES A API MANAGEMENT NO TIENEN BASE ADDRESS
-                //client.BaseAddress = this.UriApi;
+                request = request + "?" + this.queryString;
                 client.DefaultRequestHeaders.Clear();
                 client.DefaultRequestHeaders.Accept.Add(this.Header);
-                //DEBEMOS INDICAR EN HEADERS QUE NO UTILICE CACHE
                 client.DefaultRequestHeaders.CacheControl =
                     CacheControlHeaderValue.Parse("no-cache");
-                //LAS PETICIONES SE REALIZAN EN EL PROPIO METODO DE LLAMADA
-                //JUNTO A LA URL
+                client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key"
+                    , "21ed2bd907234fd0999a24d4ce7066c8");
                 HttpResponseMessage response =
                     await client.GetAsync(this.UrlApi + request);
                 if (response.IsSuccessStatusCode)
                 {
-                    List<Hospital> hospitales =
-                        await response.Content.ReadAsAsync<List<Hospital>>();
-                    return hospitales;
+                    T data = await response.Content.ReadAsAsync<T>();
+                    return data;
                 }
                 else
                 {
-                    return null;
+                    return default(T);
                 }
             }
+        }
+
+        public async Task<List<Doctor>> GetDoctoresAsync()
+        {
+            string request = "/api/doctores";
+            List<Doctor> doctores = await this.CallApiAsync<List<Doctor>>(request);
+            return doctores;
         }
     }
 }

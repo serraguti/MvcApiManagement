@@ -24,11 +24,16 @@ namespace MvcApiManagement
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            string url =
+            string urlHospital =
                 this.Configuration.GetValue<string>("ApiUrls:ApiHospitales");
-            ServiceApiHospital serviceApi =
-                new ServiceApiHospital(url);
-            services.AddTransient<ServiceApiHospital>(x => serviceApi);
+            ServiceApiHospital serviceApiHospital =
+                new ServiceApiHospital(urlHospital);
+            services.AddTransient<ServiceApiHospital>(x => serviceApiHospital);
+            string urlDoctores =
+                this.Configuration.GetValue<string>("ApiUrls:ApiDoctores");
+            ServiceApiDoctores serviceApiDoctores =
+                new ServiceApiDoctores(urlDoctores);
+            services.AddTransient<ServiceApiDoctores>(x => serviceApiDoctores);
             services.AddControllersWithViews();
         }
 
